@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rate My Vibe</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      margin: 0; padding: 20px;
+      display: flex; justify-content: center;
+    }
+    .container {
+      max-width: 480px;
+      background: white;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgb(0 0 0 / 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    .question {
+      display: none;
+      margin-bottom: 20px;
+    }
+    .question.active {
+      display: block;
+    }
+    .question p {
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    input[type="radio"] {
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    input[type="file"] {
+      font-size: 1rem;
+    }
+    #nextBtn {
+      background: #4a90e2;
+      border: none;
+      color: white;
+      padding: 12px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.25s ease;
+    }
+    #nextBtn:hover {
+      background: #357ABD;
+    }
+    .result-card {
+      background: #fff;
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .result-card img {
+      max-width: 150px;
+      border-radius: 50%;
+      margin-bottom: 15px;
+      border: 3px solid #4a90e2;
+    }
+    .result-card h2 {
+      margin: 0 0 12px;
+      font-size: 1.8rem;
+      color: #333;
+    }
+    .result-card p {
+      font-size: 1rem;
+      color: #555;
+      margin: 8px 0;
+    }
+    .share-btn {
+      margin-top: 15px;
+      padding: 10px 18px;
+      border: none;
+      background: #34a853;
+      color: white;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background-color 0.25s ease;
+    }
+    .share-btn:hover {
+      background: #2c8e44;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Rate My Vibe</h1>
+
+    <form id="quizForm">
+      <!-- Question 1 -->
+      <div class="question" data-question="1">
+        <p>1. Your energy level?</p>
+        <label><input type="radio" name="q1" value="high"> High energy</label>
+        <label><input type="radio" name="q1" value="calm"> Calm vibes</label>
+        <label><input type="radio" name="q1" value="moody"> Moody</label>
+        <label><input type="radio" name="q1" value="balanced"> Balanced</label>
+      </div>
+
+      <!-- Question 2 -->
+      <div class="question" data-question="2">
+        <p>3. What’s your favorite pet?</p>
+        <label><input type="radio" name="q2" value="dog"> Dog</label>
+        <label><input type="radio" name="q2" value="cat"> Cat</label>
+        <label><input type="radio" name="q2" value="bird"> Bird</label>
+        <label><input type="radio" name="q2" value="none"> None</label>
+      </div>
+
+      <!-- Question 3 -->
+      <div class="question" data-question="3">
+        <p>3. Your vibe color?</p>
+        <label><input type="radio" name="q3" value="red"> Red</label>
+        <label><input type="radio" name="q3" value="blue"> Blue</label>
+        <label><input type="radio" name="q3" value="purple"> Purple</label>
+        <label><input type="radio" name="q3" value="green"> Green</label>
+      </div>
+
+      <!-- Question 4 -->
+      <div class="question" data-question="4">
+        <p>4. Upload a selfie (optional)</p>
+        <input type="file" accept="image/*" id="selfieInput" />
+      </div>
+
+      <button type="button" id="nextBtn">Next ➡️</button>
+    </form>
+
+    <div id="result" class="result-card" style="display:none;"></div>
+  </div>
+
+  <script>
+    const questions = document.querySelectorAll(".question");
+    const nextBtn = document.getElementById("nextBtn");
+    const result = document.getElementById("result");
+    let currentQuestionIndex = 0;
+    let selfieDataUrl = null;
+
+    // Data arrays for vibes and personality
+    const vibes = [
+      "🔥 The Fiery Spark",
+      "🌊 The Calm Wave",
+      "🌟 The Shining Star",
+      "🌙 The Mysterious Moon",
+      "⚡ The Electric Energy",
+      "🍃 The Chill Breeze",
+      "💥 The Explosive Force",
+      "🎯 The Focused Arrow",
+      "🎉 The Party Starter",
+      "🧘 The Zen Master",
+      "🌈 The Colorful Soul",
+      "🐉 The Fierce Dragon",
+      "🦄 The Unique Dreamer",
+      "🎨 The Artistic Mind",
+      "📚 The Knowledge Seeker",
+      "🏹 The Passionate Archer",
+      "💎 The Precious Gem",
+      "🚀 The Adventurous Rocket",
+      "🦋 The Gentle Butterfly",
+      "⚓ The Steady Anchor"
+    ];
+
+    const personalityTexts = [
+      "Your vibe is full of energy and passion. People are drawn to your confident and fiery spirit.",
+      "You bring calm and peace wherever you go. Your friends trust your gentle and understanding nature.",
+      "A shining star in every room! You inspire others with your brightness and positivity.",
+      "Mysterious and deep, you keep people guessing but wanting more of your vibe.",
+      "Your energy crackles like lightning. You're unpredictable and exciting.",
+      "Laid-back and chill, you are the go-to for relaxing and good times.",
+      "Your force is explosive — intense and unforgettable.",
+      "Focused and driven, you always hit your target and go after what you want.",
+      "The life of the party! You make everyone smile and dance.",
+      "Balanced and peaceful, your presence is soothing.",
+      "Colorful and creative, you add magic to the world around you.",
+      "Fierce and fearless, you protect your loved ones fiercely.",
+      "Unique and dreamy, you see the world differently and inspire imagination.",
+      "Creative and thoughtful, your artistic touch is admired.",
+      "Curious and intelligent, you seek knowledge and growth.",
+      "Passionate and determined, your goals light your path.",
+      "Rare and precious, people treasure your loyalty and honesty.",
+      "Adventurous and bold, you're always ready for a new journey.",
+      "Gentle and kind, you flutter with grace and compassion.",
+      "Reliable and steady, you keep everything grounded and safe."
+    ];
+
+    // Matches based on vibe index
+    const matchesList = [
+      "People with bold, adventurous souls like you. 🔥",
+      "Those who appreciate peace and deep conversations. 🌊",
+      "Optimists and dreamers who shine bright. 🌟",
+      "Mystery lovers and curious minds. 🌙",
+      "Adrenaline seekers and thrill lovers. ⚡",
+      "Laid-back friends who love good vibes. 🍃",
+      "Passionate and intense types. 💥",
+      "Goal-driven and motivated partners. 🎯",
+      "Party animals and fun lovers. 🎉",
+      "Peace seekers and calm companions. 🧘",
+      "Creative and colorful personalities. 🌈",
+      "Strong and protective mates. 🐉",
+      "Unique souls who dare to be different. 🦄",
+      "Art lovers and creatives. 🎨",
+      "Intellectual and curious minds. 📚",
+      "Determined and passionate lovers. 🏹",
+      "Honest and loyal partners. 💎",
+      "Adventurous spirits who love exploring. 🚀",
+      "Kind-hearted and gentle friends. 🦋",
+      "Steady and reliable companions. ⚓"
+    ];
+
+    // Show question by index
+    function showQuestion(index) {
+      questions.forEach((q, i) => {
+        q.classList.toggle("active", i === index);
+      });
+      nextBtn.textContent = (index === questions.length - 1) ? "Get My Vibe 🔮" : "Next ➡️";
+    }
+
+    // Get all answers from radio buttons (except selfie)
+    function getAnswers() {
+      const answers = [];
+      for(let i = 1; i <= 3; i++) {
+        const selected = document.querySelector(`input[name=q${i}]:checked`);
+        answers.push(selected ? selected.value : null);
+      }
+      return answers;
+    }
+
+    nextBtn.addEventListener("click", () => {
+      const currentQ = questions[currentQuestionIndex];
+
+      if (currentQ.dataset.question !== "4") {
+        // Validate that an option is selected
+        const checked = currentQ.querySelector("input[type=radio]:checked");
+        if (!checked) {
+          alert("Please answer this question first.");
+          return;
+        }
+      } else {
+        // Selfie question: if file uploaded, read it as data URL
+        const fileInput = currentQ.querySelector("input[type=file]");
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          if (file && file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              selfieDataUrl = e.target.result;
+              proceedNext();
+            }
+            reader.readAsDataURL(file);
+            return; // wait for async read
+          }
+        }
+      }
+
+      proceedNext();
+    });
+
+    function proceedNext() {
+      if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+        showQuestion(currentQuestionIndex);
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      const answers = getAnswers();
+
+      // Simple scoring: sum char codes of answers strings
+      let score = 0;
+      answers.forEach(ans => {
+        if (ans) {
+          for (let ch of ans) {
+            score += ch.charCodeAt(0);
+          }
+        }
+      });
+      const vibeIndex = score % vibes.length;
+
+      const vibe = vibes[vibeIndex];
+      const personality = personalityTexts[vibeIndex];
+      const match = matchesList[vibeIndex];
+
+      // Show selfie if available
+      let selfieHtml = "";
+      if (selfieDataUrl) {
+        selfieHtml = `<img src="${selfieDataUrl}" alt="Your Selfie" />`;
+      }
+
+      result.style.display = "block";
+      result.innerHTML = `
+        ${selfieHtml}
+        <h2>${vibe}</h2>
+        <p>${personality}</p>
+        <p><strong>People who secretly like you:</strong><br>${match}</p>
+        <p style="margin-top: 15px; font-style: italic;">📸 Take a screenshot & share your vibe!</p>
+        <button class="share-btn">📤 Share this Vibe</button>
+      `;
+
+      result.scrollIntoView({ behavior: "smooth" });
+
+      // Add share button functionality
+      const shareBtn = result.querySelector(".share-btn");
+      shareBtn.addEventListener("click", () => {
+        const shareText = `${vibe}\n${personality}\nPeople who secretly like you:\n${match}`;
+        if (navigator.share) {
+          navigator.share({
+            title: 'My Vibe',
+            text: shareText,
+          }).catch(() => alert('Sharing failed or was cancelled.'));
+        } else {
+          // fallback: copy to clipboard
+          navigator.clipboard.writeText(shareText).then(() => {
+            alert('Vibe text copied! You can now paste it anywhere to share.');
+          });
+        }
+      });
+    }
+
+    // Init first question
+    showQuestion(0);
+  </script>
+
+</body>
+</html>
